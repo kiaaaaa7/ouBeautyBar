@@ -247,30 +247,57 @@
 }   
 
 /* ABOUT */
-    #about {
-    background: linear-gradient(rgba(92,107,58,.92), rgba(92,107,58,.92)),
-                url('/images/NAMA_FILE_KAMU.jpg') center/cover no-repeat fixed;
-    color: white;
-    }
-    #about .section-label { color: var(--lilac); }
-    #about h2 { color: white; }
-    #about h2 em { color: var(--lilac); }
-    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
-    .about-text p { font-size: .92rem; line-height: 2; opacity: .75; margin-bottom: 1.5rem; }
-    .about-info { display: flex; flex-direction: column; gap: .8rem; font-size: .85rem; opacity: .8; }
-    .about-info span { display: flex; align-items: center; gap: .8rem; }
-    .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .about-stat {
-      border: 1px solid rgba(255,255,255,.15);
-      padding: 1.8rem; border-radius: 2px;
-      background: rgba(255,255,255,.05);
-    }
-    .about-stat-num {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.8rem; color: var(--lilac); display: block; line-height: 1;
-    }
-    .about-stat-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; opacity: .5; margin-top: .4rem; display: block; }
+#about {
+  background: linear-gradient(rgba(92,107,58,.92), rgba(92,107,58,.92)),
+              url('/images/NAMA_FILE_KAMU.jpg') center/cover no-repeat fixed;
+  color: white;
+  padding: 7rem 4rem;
+}
+#about .section-label { color: var(--lilac); }
+#about h2 { color: white; margin-bottom: 1.5rem; }
+#about h2 em { color: var(--lilac); }
 
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+
+.about-text p { font-size: .95rem; line-height: 2; opacity: .75; margin-bottom: 2rem; }
+.about-info { display: flex; flex-direction: column; gap: 1rem; }
+.about-info span {
+  display: flex; align-items: center; gap: 1rem;
+  font-size: .88rem; opacity: .8;
+  padding: .8rem 1.2rem;
+  background: rgba(255,255,255,.06);
+  border-left: 2px solid var(--lilac);
+  border-radius: 0 4px 4px 0;
+  transition: background .2s;
+}
+.about-info span:hover { background: rgba(255,255,255,.1); }
+
+.about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.about-stat {
+  padding: 2.2rem 1.8rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  transition: background .3s, transform .3s;
+  position: relative; overflow: hidden;
+}
+.about-stat::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--lilac), transparent);
+}
+.about-stat:hover { background: rgba(255,255,255,.12); transform: translateY(-4px); }
+.about-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem; color: var(--lilac);
+  display: block; line-height: 1; margin-bottom: .5rem;
+}
+.about-stat-label {
+  font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; opacity: .55;
+  display: block;
+}
     footer {
       background: #1E2018; color: rgba(255,255,255,.35);
       text-align: center; padding: 2rem 4rem; font-size: .78rem; letter-spacing: .05em;
@@ -420,23 +447,34 @@
     <div class="about-text">
       <span class="section-label">Tentang Kami</span>
       <h2>Studio <em>Nail Art</em><br>Terpercaya</h2>
-      <p>OU Beauty Bar hadir untuk memberikan pengalaman nail art terbaik di Bandung. Kami menggunakan bahan-bahan berkualitas tinggi yang aman untuk kuku dan kulit kamu.</p>
+      <p>OU Beauty Bar hadir untuk memberikan pengalaman nail art terbaik di Bandung. Kami menggunakan bahan-bahan premium yang aman dan hasil yang selalu memukau.</p>
       <div class="about-info">
-        <span>📅 Senin – Minggu</span>
-        <span>🕘 09.00 – 17.00</span>
-        <span>📍 Jl. Kalimantan No 2, Bandung</span>
-        <span>📸 @ou.beautybar</span>
+        <span>📅 &nbsp;Senin – Minggu</span>
+        <span>🕘 &nbsp;09.00 – 17.00 WIB</span>
+        <span>📍 &nbsp;Jl. Kalimantan No 2, Bandung</span>
+        <span>📸 &nbsp;@ou.beautybar</span>
       </div>
     </div>
     <div class="about-stats">
-      <div class="about-stat"><span class="about-stat-num">500+</span><span class="about-stat-label">Klien Puas</span></div>
-      <div class="about-stat"><span class="about-stat-num">50+</span><span class="about-stat-label">Desain</span></div>
-      <div class="about-stat"><span class="about-stat-num">3+</span><span class="about-stat-label">Tahun</span></div>
-      <div class="about-stat"><span class="about-stat-num">5★</span><span class="about-stat-label">Rating</span></div>
+      <div class="about-stat">
+        <span class="about-stat-num">500+</span>
+        <span class="about-stat-label">Klien Puas</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num">50+</span>
+        <span class="about-stat-label">Desain Tersedia</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num">3+</span>
+        <span class="about-stat-label">Tahun Berpengalaman</span>
+      </div>
+      <div class="about-stat">
+        <span class="about-stat-num">5★</span>
+        <span class="about-stat-label">Rating Pelanggan</span>
+      </div>
     </div>
   </div>
 </section>
-
 <footer>
   <p>© 2024 <span>OU Beauty Bar</span> · Jl. Kalimantan No 2, Bandung 💅</p>
 </footer>
