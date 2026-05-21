@@ -15,16 +15,20 @@ class DatabaseSeeder extends Seeder
         DB::table('designs')->insert([
             [
                 'nama' => 'Nail Art Pink',
+                'kategori' => 'Gel',
+                'deskripsi' => 'Desain kuku pink aesthetic',
                 'harga' => 50000,
-                'image' => 'design1.jpg',
+                'gambar' => 'design1.jpg',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
 
             [
                 'nama' => 'Soft Glam Makeup',
+                'kategori' => '3D',
+                'deskripsi' => 'Soft glam elegan',
                 'harga' => 120000,
-                'image' => 'design2.jpg',
+                'gambar' => 'design2.jpg',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
