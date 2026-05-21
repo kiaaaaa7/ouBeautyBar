@@ -1,43 +1,76 @@
 <?php
 
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\DesignController;
-use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use Illuminate\Support\Facades\Route;
 
-// Halaman utama
-Route::get('/', [DesignController::class, 'index'])->name('home');
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
 
-// Auth (login, register) - dari Breeze
+Route::get('/', [ProductController::class, 'index'])->name('home');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+/*
+|--------------------------------------------------------------------------
+| USER ROUTES — harus login
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/checkout', [OrderController::class, 'store'])->name('orders.store');
+
+    Route::get('/pesanan', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/pesanan/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/pesanan/{order}/bukti-bayar', [OrderController::class, 'uploadPaymentProof'])->name('orders.upload-proof');
+    Route::post('/pesanan/{order}/batal', [OrderController::class, 'cancel'])->name('orders.cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES — harus login + is_admin
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', fn() => redirect()->route('admin.orders.index'))->name('dashboard');
+
+    // Kategori
+    Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+    // Produk
+    Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
+    Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+
+    // Foto produk
+    Route::delete('/product-images/{image}', [AdminProductController::class, 'destroyImage'])->name('product-images.destroy');
+    Route::post('/product-images/{image}/primary', [AdminProductController::class, 'setPrimaryImage'])->name('product-images.primary');
+
+    // Pesanan
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::post('/orders/{order}/confirm-payment', [AdminOrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
+});
+
+/*
+|--------------------------------------------------------------------------
+| AUTH ROUTES — bawaan Laravel Breeze
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__.'/auth.php';
-
-// Route untuk customer (harus login)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [AppointmentController::class, 'dashboard'])->name('dashboard');
-
-    // Appointment
-    Route::get('/booking/{design}', [AppointmentController::class, 'create'])->name('booking.create');
-    Route::post('/booking', [AppointmentController::class, 'store'])->name('booking.store');
-    Route::delete('/booking/{id}', [AppointmentController::class, 'destroy'])->name('booking.destroy');
-
-    // Testimonial
-    Route::post('/testimonial', [TestimonialController::class, 'store'])->name('testimonial.store');
-});
-
-// Route untuk admin
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('index');
-    Route::get('/appointments', [AdminController::class, 'appointments'])->name('appointments');
-    Route::patch('/appointments/{id}/status', [AdminController::class, 'updateStatus'])->name('appointments.status');
-    Route::delete('/appointments/{id}', [AdminController::class, 'destroy'])->name('appointments.destroy');
-    Route::get('/designs/{id}/edit', [AdminController::class, 'editDesign'])->name('designs.edit');
-    Route::put('/designs/{id}', [AdminController::class, 'updateDesign'])->name('designs.update');
-    // Kelola desain
-    Route::get('/designs', [AdminController::class, 'designs'])->name('designs');
-    Route::get('/designs/create', [AdminController::class, 'createDesign'])->name('designs.create');
-    Route::post('/designs', [AdminController::class, 'storeDesign'])->name('designs.store');
-    Route::get('/designs/{id}/edit', [AdminController::class, 'editDesign'])->name('designs.edit');
-    Route::put('/designs/{id}', [AdminController::class, 'updateDesign'])->name('designs.update');
-    Route::delete('/designs/{id}', [AdminController::class, 'destroyDesign'])->name('designs.destroy');
-});
