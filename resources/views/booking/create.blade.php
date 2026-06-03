@@ -83,6 +83,70 @@
     .upload-text { font-size: .85rem; color: var(--gray); }
     .upload-hint { font-size: .75rem; color: var(--lilac-deep); margin-top: .3rem; }
     #preview-foto { width: 100%; max-height: 200px; object-fit: cover; margin-top: 1rem; display: none; }
+    #preview-kuku { width: 100%; max-height: 200px; object-fit: cover; margin-top: 1rem; display: none; }
+
+    /* ===== CUSTOM NAIL SECTION ===== */
+    .section-divider {
+      grid-column: 1/-1;
+      border: none; border-top: 1px solid rgba(92,107,58,.15);
+      margin: .8rem 0;
+    }
+    .section-label {
+      grid-column: 1/-1;
+      font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--olive); padding-bottom: .3rem;
+      border-bottom: 1px solid rgba(92,107,58,.2);
+    }
+
+    .finger-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .7rem;
+    }
+    .finger-item {
+      display: flex; flex-direction: column; gap: .35rem;
+    }
+    .finger-label-name {
+      font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gray); text-align: center;
+    }
+    .finger-item select {
+      padding: .5rem .4rem; font-size: .75rem; text-align: center;
+      border: 1px solid rgba(92,107,58,.2); background: white;
+      cursor: pointer;
+    }
+    .finger-item select:focus { border-color: var(--lilac-deep); }
+
+    /* HAND TABS */
+    .hand-tabs { display: flex; gap: 0; margin-bottom: 1rem; }
+    .hand-tab {
+      flex: 1; padding: .6rem; font-size: .75rem; letter-spacing: .08em;
+      text-transform: uppercase; border: 1px solid rgba(92,107,58,.2);
+      background: white; cursor: pointer; font-family: 'Jost', sans-serif;
+      color: var(--gray); transition: all .2s;
+    }
+    .hand-tab:first-child { border-right: none; }
+    .hand-tab.active { background: var(--olive-pale); color: var(--olive); font-weight: 500; border-color: var(--olive); }
+    .hand-panel { display: none; }
+    .hand-panel.active { display: block; }
+
+    /* PRICE SUMMARY */
+    .price-summary {
+      background: var(--lilac-pale); border: 1px solid rgba(155,135,176,.3);
+      padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .price-summary-label { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); }
+    .price-summary-amount { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--lilac-deep); font-weight: 600; }
+    .price-breakdown { font-size: .75rem; color: var(--gray); margin-top: .25rem; }
+
+    /* COPY HAND */
+    .copy-hand-btn {
+      background: none; border: 1px dashed rgba(92,107,58,.3);
+      color: var(--olive); font-size: .72rem; padding: .4rem .8rem;
+      cursor: pointer; font-family: 'Jost', sans-serif; letter-spacing: .06em;
+      margin-bottom: .8rem; transition: all .2s;
+    }
+    .copy-hand-btn:hover { background: var(--olive-pale); border-style: solid; }
 
     @media(max-width:768px) {
       nav { padding: 1rem 1.5rem; }
@@ -90,6 +154,8 @@
       .form-grid, .payment-options { grid-template-columns: 1fr; }
       .form-group.full { grid-column: 1; }
       .design-preview { flex-direction: column; }
+      .finger-grid { grid-template-columns: repeat(5, 1fr); gap: .4rem; }
+      .finger-item select { font-size: .65rem; padding: .4rem .2rem; }
     }
   </style>
 </head>
@@ -121,8 +187,18 @@
       <h3 class="preview-nama">{{ $design->nama }}</h3>
       <p style="font-size:.82rem;color:var(--gray);margin-bottom:.5rem">{{ $design->deskripsi }}</p>
       <p class="preview-harga">
-        Rp {{ number_format($design->harga_min, 0, ',', '.') }} –
-        Rp {{ number_format($design->harga_max, 0, ',', '.') }}
+        @if($design->harga_min == $design->harga_max)
+          Rp {{ number_format($design->harga_min, 0, ',', '.') }}
+        @else
+          Rp {{ number_format($design->harga_min, 0, ',', '.') }} –
+          Rp {{ number_format($design->harga_max, 0, ',', '.') }}
+        @endif
+      </p>
+      <p style="font-size:.75rem;color:var(--gray);margin-top:.3rem">
+        Harga per jari: Rp {{ number_format($design->harga_min / 10, 0, ',', '.') }}
+        @if($design->harga_min != $design->harga_max)
+          – Rp {{ number_format($design->harga_max / 10, 0, ',', '.') }}
+        @endif
       </p>
     </div>
   </div>
@@ -130,6 +206,8 @@
   <form action="{{ route('booking.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
     <input type="hidden" name="design_id" value="{{ $design->id }}"/>
+    <input type="hidden" name="total_harga" id="input-total-harga" value="0"/>
+
     <div class="form-grid">
 
       <div class="form-group">
@@ -162,6 +240,97 @@
         @error('panjang_kuku') <span class="invalid-feedback">{{ $message }}</span> @enderror
       </div>
 
+      <hr class="section-divider"/>
+
+      {{-- ===== CUSTOM PER JARI ===== --}}
+      <div class="form-group full">
+        <p class="section-label">Pilih Model per Jari</p>
+        <p style="font-size:.8rem;color:var(--gray);margin-bottom:1rem">
+          Kamu bisa pilih model yang berbeda untuk setiap jari.
+        </p>
+
+        {{-- Tab tangan --}}
+        <div class="hand-tabs">
+          <button type="button" class="hand-tab active" onclick="switchHand('kiri', this)">✋ Tangan Kiri</button>
+          <button type="button" class="hand-tab" onclick="switchHand('kanan', this)">🤚 Tangan Kanan</button>
+        </div>
+
+        {{-- Panel tangan kiri --}}
+        <div class="hand-panel active" id="panel-kiri">
+          <button type="button" class="copy-hand-btn" onclick="copyToRight()">
+            Salin pilihan ke Tangan Kanan →
+          </button>
+          <div class="finger-grid">
+            @php
+              $jariKiri = ['Kelingking', 'Manis', 'Tengah', 'Telunjuk', 'Ibu Jari'];
+            @endphp
+            @foreach($jariKiri as $idx => $nama)
+              <div class="finger-item">
+                <span class="finger-label-name">{{ $nama }}</span>
+                <select name="pilihan_jari[kiri][{{ $idx }}]"
+                        class="finger-select"
+                        data-harga-min="{{ $design->harga_min }}"
+                        data-harga-max="{{ $design->harga_max }}"
+                        onchange="hitungTotal()">
+                  <option value="{{ $design->id }}" data-harga="{{ $design->harga_min / 10 }}">
+                    {{ $design->nama }}
+                  </option>
+                  @foreach($allDesigns as $d)
+                    @if($d->id !== $design->id)
+                      <option value="{{ $d->id }}" data-harga="{{ $d->harga_min / 10 }}">
+                        {{ $d->nama }}
+                      </option>
+                    @endif
+                  @endforeach
+                </select>
+              </div>
+            @endforeach
+          </div>
+        </div>
+
+        {{-- Panel tangan kanan --}}
+        <div class="hand-panel" id="panel-kanan">
+          <div class="finger-grid">
+            @php
+              $jariKanan = ['Ibu Jari', 'Telunjuk', 'Tengah', 'Manis', 'Kelingking'];
+            @endphp
+            @foreach($jariKanan as $idx => $nama)
+              <div class="finger-item">
+                <span class="finger-label-name">{{ $nama }}</span>
+                <select name="pilihan_jari[kanan][{{ $idx }}]"
+                        class="finger-select"
+                        onchange="hitungTotal()">
+                  <option value="{{ $design->id }}" data-harga="{{ $design->harga_min / 10 }}">
+                    {{ $design->nama }}
+                  </option>
+                  @foreach($allDesigns as $d)
+                    @if($d->id !== $design->id)
+                      <option value="{{ $d->id }}" data-harga="{{ $d->harga_min / 10 }}">
+                        {{ $d->nama }}
+                      </option>
+                    @endif
+                  @endforeach
+                </select>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      </div>
+
+      {{-- TOTAL HARGA --}}
+      <div class="form-group full">
+        <div class="price-summary">
+          <div>
+            <p class="price-summary-label">Estimasi Total Harga</p>
+            <p class="price-breakdown" id="price-breakdown">10 jari × model terpilih</p>
+          </div>
+          <div class="price-summary-amount" id="total-display">Rp 0</div>
+        </div>
+        <p style="font-size:.72rem;color:var(--gray);margin-top:.5rem">
+          * Harga final dikonfirmasi oleh nail artist setelah booking.
+        </p>
+      </div>
+
       <div class="form-group full">
         <label>Metode Pembayaran</label>
         <div class="payment-options">
@@ -179,12 +348,26 @@
         @error('metode_bayar') <span class="invalid-feedback">{{ $message }}</span> @enderror
       </div>
 
-      <!-- FOTO REFERENSI -->
+      {{-- FOTO UKURAN KUKU --}}
+      <div class="form-group full">
+        <label>Foto Ukuran Kuku (opsional tapi disarankan)</label>
+        <div class="upload-area" onclick="document.getElementById('foto_kuku').click()">
+          <input type="file" id="foto_kuku" name="foto_kuku"
+                 accept="image/*" onchange="previewImg(this, 'preview-kuku')"/>
+          <span class="upload-icon">🖐️</span>
+          <p class="upload-text">Upload foto kuku kamu agar ukuran lebih akurat</p>
+          <p class="upload-hint">JPG, PNG, max 2MB — foto kedua tangan, pencahayaan terang</p>
+          <img id="preview-kuku" src="" alt="Preview Kuku"/>
+        </div>
+        @error('foto_kuku') <span class="invalid-feedback">{{ $message }}</span> @enderror
+      </div>
+
+      {{-- FOTO REFERENSI --}}
       <div class="form-group full">
         <label>Foto Referensi Desain (opsional)</label>
         <div class="upload-area" onclick="document.getElementById('foto_referensi').click()">
           <input type="file" id="foto_referensi" name="foto_referensi"
-                 accept="image/*" onchange="previewFoto(this)"/>
+                 accept="image/*" onchange="previewImg(this, 'preview-foto')"/>
           <span class="upload-icon">📸</span>
           <p class="upload-text">Klik untuk upload foto referensi desain kamu</p>
           <p class="upload-hint">JPG, PNG, max 2MB</p>
@@ -204,8 +387,68 @@
 </div>
 
 <script>
-function previewFoto(input) {
-  const preview = document.getElementById('preview-foto');
+// ===== DATA HARGA PER DESIGN =====
+// Diisi dari PHP ke JS
+const designPrices = {
+  @foreach($allDesigns as $d)
+  {{ $d->id }}: {{ $d->harga_min / 10 }},
+  @endforeach
+};
+
+// ===== SWITCH TAB TANGAN =====
+function switchHand(hand, btn) {
+  document.querySelectorAll('.hand-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.hand-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + hand).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== SALIN KE TANGAN KANAN =====
+function copyToRight() {
+  const kiriSelects = document.querySelectorAll('#panel-kiri .finger-select');
+  const kananSelects = document.querySelectorAll('#panel-kanan .finger-select');
+
+  // Kiri: kelingking(0), manis(1), tengah(2), telunjuk(3), ibu jari(4)
+  // Kanan: ibu jari(0), telunjuk(1), tengah(2), manis(3), kelingking(4)
+  // Mirror: kiri[0] -> kanan[4], kiri[1] -> kanan[3], dst
+  kiriSelects.forEach((sel, i) => {
+    const mirrorIdx = 4 - i;
+    kananSelects[mirrorIdx].value = sel.value;
+  });
+
+  hitungTotal();
+  switchHand('kanan', document.querySelectorAll('.hand-tab')[1]);
+}
+
+// ===== HITUNG TOTAL =====
+function hitungTotal() {
+  const selects = document.querySelectorAll('.finger-select');
+  let total = 0;
+  let breakdown = {};
+
+  selects.forEach(sel => {
+    const designId = parseInt(sel.value);
+    const harga = designPrices[designId] || 0;
+    total += harga;
+
+    // Untuk breakdown teks
+    const nama = sel.options[sel.selectedIndex].text;
+    breakdown[nama] = (breakdown[nama] || 0) + 1;
+  });
+
+  // Update display
+  document.getElementById('total-display').textContent =
+    'Rp ' + total.toLocaleString('id-ID');
+  document.getElementById('input-total-harga').value = total;
+
+  // Breakdown teks
+  const parts = Object.entries(breakdown).map(([nama, qty]) => `${qty}× ${nama}`);
+  document.getElementById('price-breakdown').textContent = parts.join(', ');
+}
+
+// ===== PREVIEW FOTO =====
+function previewImg(input, previewId) {
+  const preview = document.getElementById(previewId);
   if (input.files && input.files[0]) {
     const reader = new FileReader();
     reader.onload = e => {
@@ -215,6 +458,9 @@ function previewFoto(input) {
     reader.readAsDataURL(input.files[0]);
   }
 }
+
+// Init hitung saat load
+document.addEventListener('DOMContentLoaded', hitungTotal);
 </script>
 
 </body>

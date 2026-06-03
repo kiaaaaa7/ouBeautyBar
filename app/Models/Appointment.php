@@ -13,6 +13,12 @@ class Appointment extends Model
         'user_id', 'design_id', 'tanggal', 'jam',
         'panjang_kuku', 'metode_bayar', 'status',
         'catatan', 'foto_referensi',
+        'pilihan_jari', 'foto_kuku', 'total_harga',
+    ];
+
+    protected $casts = [
+        'pilihan_jari' => 'array',
+        'total_harga'  => 'decimal:2',
     ];
 
     public function user()   { return $this->belongsTo(User::class); }
