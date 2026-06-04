@@ -116,6 +116,17 @@
       .panel.active { display: block; }
       .finger-item select { font-size: .65rem; padding: .4rem .2rem; }
     }
+    .measurement-guide{
+  margin-bottom:12px;
+  text-align:center;
+}
+
+.measurement-guide img{
+  max-width:350px;
+  width:100%;
+  border-radius:10px;
+  border:1px solid rgba(92,107,58,.15);
+}
   </style>
 </head>
 <body>
@@ -358,7 +369,14 @@
         </div>
 
         <div class="form-group full">
-          <label>Foto Jari Bersama Koin 500 Perak <span style="color:#e53935">*</span></label>
+  <label>Foto Jari Bersama Koin 500 Perak <span style="color:#e53935">*</span></label>
+
+  <div class="measurement-guide">
+    <img src="{{ asset('images/contoh-ukur-kuku.jpg') }}"
+         alt="Contoh ukur kuku">
+  </div>
+
+  <div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
           <div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
             <input type="file" id="foto-jari-koin" name="foto_jari_koin"
                    accept="image/*" onchange="previewSingle(this,'prev-jari-koin')"/>

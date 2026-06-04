@@ -93,7 +93,7 @@ class AppointmentController extends Controller
             $fotoJariKoin = $request->file('foto_jari_koin')->store('jari-koin', 'public');
         }
 
-        $metodeBayar = $tipe === 'nail_art' ? $request->metode_bayar : 'Lunas (Press On)';
+        $metodeBayar = $tipe === 'nail_art' ? $request->metode_bayar : 'Transfer Bank';
 
         Appointment::create([
             'user_id'             => auth()->id(),
