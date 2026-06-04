@@ -23,23 +23,23 @@ class AppointmentController extends Controller
 
     public function create(Design $design)
     {
-        return view('booking.create', compact('design'));
+        $allDesigns = Design::orderBy('nama')->get();
+        return view('booking.create', compact('design', 'allDesigns'));
     }
 
     public function store(Request $request)
     {
         $tipe = $request->tipe_order;
 
-        // Validasi bersama
         $rules = [
             'design_id'    => 'required|exists:designs,id',
             'tipe_order'   => 'required|in:nail_art,press_on',
             'panjang_kuku' => 'required',
             'bentuk_kuku'  => 'required',
             'no_wa'        => 'required|string|max:20',
+            'pilihan_jari' => 'nullable|array',
         ];
 
-        // Validasi khusus nail art
         if ($tipe === 'nail_art') {
             $rules['tanggal']        = 'required|date|after:today';
             $rules['jam']            = 'required';
@@ -47,27 +47,39 @@ class AppointmentController extends Controller
             $rules['foto_referensi'] = 'nullable|image|max:2048';
         }
 
-        // Validasi khusus press on
         if ($tipe === 'press_on') {
-            $rules['foto_jari_koin']    = 'required|image|max:2048';
-            $rules['foto_referensi.*']  = 'nullable|image|max:2048';
+            $rules['foto_jari_koin']   = 'required|image|max:2048';
+            $rules['foto_referensi.*'] = 'nullable|image|max:2048';
         }
 
         $request->validate($rules, [
-            'tanggal.after'       => 'Tanggal harus minimal besok.',
-            'no_wa.required'      => 'Nomor WhatsApp wajib diisi.',
+            'tanggal.after'           => 'Tanggal harus minimal besok.',
+            'no_wa.required'          => 'Nomor WhatsApp wajib diisi.',
             'foto_jari_koin.required' => 'Foto jari dengan koin 500 wajib diunggah.',
         ]);
 
-        // ===== SIMPAN FOTO =====
+        // Hitung total harga dari pilihan per jari
+        $pilihanJari = $request->pilihan_jari ?? [];
+        $totalHarga  = 0;
 
-        // Nail art: 1 foto referensi
+        if (!empty($pilihanJari)) {
+            $allDesignIds = collect($pilihanJari)->flatten()->unique()->values();
+            $designPrices = Design::whereIn('id', $allDesignIds)->pluck('harga_min', 'id');
+
+            foreach ($pilihanJari as $tangan => $jari) {
+                foreach ($jari as $designId) {
+                    $totalHarga += ($designPrices[$designId] ?? 0) / 10;
+                }
+            }
+        }
+
+        // Foto referensi single (nail art)
         $fotoRef = null;
         if ($tipe === 'nail_art' && $request->hasFile('foto_referensi')) {
             $fotoRef = $request->file('foto_referensi')->store('referensi', 'public');
         }
 
-        // Press on: multiple foto referensi
+        // Foto referensi multiple (press on)
         $fotoRefList = [];
         if ($tipe === 'press_on' && $request->hasFile('foto_referensi')) {
             foreach ($request->file('foto_referensi') as $foto) {
@@ -75,18 +87,13 @@ class AppointmentController extends Controller
             }
         }
 
-        // Press on: foto jari + koin
+        // Foto jari + koin (press on)
         $fotoJariKoin = null;
         if ($tipe === 'press_on' && $request->hasFile('foto_jari_koin')) {
             $fotoJariKoin = $request->file('foto_jari_koin')->store('jari-koin', 'public');
         }
 
-        // ===== METODE BAYAR =====
-        // Nail art → DP (admin konfirmasi harga via WA)
-        // Press on → Lunas
-        $metodeBayar = $tipe === 'nail_art'
-            ? $request->metode_bayar
-            : 'Lunas (Press On)';
+        $metodeBayar = $tipe === 'nail_art' ? $request->metode_bayar : 'Lunas (Press On)';
 
         Appointment::create([
             'user_id'             => auth()->id(),
@@ -103,10 +110,12 @@ class AppointmentController extends Controller
             'foto_referensi'      => $fotoRef,
             'foto_referensi_list' => !empty($fotoRefList) ? $fotoRefList : null,
             'foto_jari_koin'      => $fotoJariKoin,
+            'pilihan_jari'        => !empty($pilihanJari) ? $pilihanJari : null,
+            'total_harga'         => $totalHarga,
         ]);
 
         $msg = $tipe === 'nail_art'
-            ? 'Booking nail art berhasil! Admin akan menghubungi kamu untuk konfirmasi DP.'
+            ? 'Booking nail art berhasil! Admin akan menghubungi kamu untuk konfirmasi DP 50%.'
             : 'Order press on nail berhasil! Admin akan menghubungi kamu segera.';
 
         return redirect()->route('dashboard')->with('success', $msg);

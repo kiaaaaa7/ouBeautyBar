@@ -132,7 +132,6 @@
             <th>Desain</th>
             <th>Info</th>
             <th>Jadwal</th>
-            <th>Foto</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -140,7 +139,7 @@
         <tbody>
           @foreach($appointments as $i => $appt)
           @php
-            $isNailArt  = $appt->tipe_order === 'nail_art';
+            $isNailArt  = $appt->tipe_order !== 'press_on';
             $namaDesain = $appt->design ? $appt->design->nama : '—';
             $katDesain  = $appt->design ? $appt->design->kategori : '';
             $gambar     = $appt->design && $appt->design->gambar
@@ -206,45 +205,6 @@
               @endif
             </td>
 
-            {{-- FOTO --}}
-            <td>
-              <div class="foto-group">
-                {{-- Foto referensi single (nail art) --}}
-                @if($appt->foto_referensi)
-                  <div>
-                    <p class="foto-label">Ref</p>
-                    <img src="{{ asset('storage/' . $appt->foto_referensi) }}"
-                         class="foto-thumb" onclick="window.open(this.src)" title="Foto referensi"/>
-                  </div>
-                @endif
-
-                {{-- Foto referensi multiple (press on) --}}
-                @if($appt->foto_referensi_list && count($appt->foto_referensi_list))
-                  <div>
-                    <p class="foto-label">Ref ({{ count($appt->foto_referensi_list) }})</p>
-                    <div style="display:flex;gap:.3rem">
-                      @foreach($appt->foto_referensi_list as $foto)
-                        <img src="{{ asset('storage/' . $foto) }}"
-                             class="foto-thumb" onclick="window.open(this.src)" title="Foto referensi"/>
-                      @endforeach
-                    </div>
-                  </div>
-                @endif
-
-                {{-- Foto jari + koin (press on) --}}
-                @if($appt->foto_jari_koin)
-                  <div>
-                    <p class="foto-label">Jari</p>
-                    <img src="{{ asset('storage/' . $appt->foto_jari_koin) }}"
-                         class="foto-thumb" onclick="window.open(this.src)" title="Foto jari + koin"/>
-                  </div>
-                @endif
-
-                @if(!$appt->foto_referensi && !$appt->foto_referensi_list && !$appt->foto_jari_koin)
-                  <span style="color:var(--gray);font-size:.78rem">—</span>
-                @endif
-              </div>
-            </td>
 
             {{-- STATUS --}}
             <td>
