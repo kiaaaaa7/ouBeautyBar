@@ -132,6 +132,7 @@
             <th>Desain</th>
             <th>Info</th>
             <th>Jadwal</th>
+            <th>Total Harga</th>
             <th>Status</th>
             <th>Aksi</th>
           </tr>
@@ -205,6 +206,24 @@
               @endif
             </td>
 
+
+            {{-- TOTAL HARGA --}}
+            <td>
+              @if($appt->total_harga)
+                <span style="font-size:.82rem;font-weight:500;color:var(--lilac-deep)">
+                  Rp {{ number_format($appt->total_harga, 0, ',', '.') }}
+                </span><br>
+                @if($isNailArt)
+                  <span style="font-size:.72rem;color:var(--olive)">
+                    DP: Rp {{ number_format(ceil($appt->total_harga * 0.5), 0, ',', '.') }}
+                  </span>
+                @else
+                  <span style="font-size:.72rem;color:var(--gray)">Lunas</span>
+                @endif
+              @else
+                <span style="color:var(--gray);font-size:.78rem">—</span>
+              @endif
+            </td>
 
             {{-- STATUS --}}
             <td>

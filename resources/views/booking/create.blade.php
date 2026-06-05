@@ -107,6 +107,12 @@
     .price-dp { font-size: .82rem; color: var(--olive); font-weight: 500; margin-top: .4rem; padding-top: .4rem; border-top: 1px dashed rgba(92,107,58,.2); }
     .price-breakdown { font-size: .73rem; color: var(--gray); margin-top: .3rem; line-height: 1.6; }
 
+    /* SLOT PICKER */
+    .slot-option input { display: none; }
+    .slot-option label { display: inline-block; padding: .5rem 1rem; border: 1.5px solid rgba(92,107,58,.2); border-radius: 4px; cursor: pointer; font-size: .82rem; transition: all .2s; color: var(--dark); }
+    .slot-option label:hover { border-color: var(--olive); background: var(--olive-pale); }
+    .slot-option input:checked + label { background: var(--olive); color: white; border-color: var(--olive); }
+
     @media(max-width:768px) {
       nav { padding: 1rem 1.5rem; }
       .container { padding: 2rem 1.2rem; }
@@ -116,17 +122,6 @@
       .panel.active { display: block; }
       .finger-item select { font-size: .65rem; padding: .4rem .2rem; }
     }
-    .measurement-guide{
-  margin-bottom:12px;
-  text-align:center;
-}
-
-.measurement-guide img{
-  max-width:350px;
-  width:100%;
-  border-radius:10px;
-  border:1px solid rgba(92,107,58,.15);
-}
   </style>
 </head>
 <body>
@@ -246,7 +241,7 @@
                 <select name="pilihan_jari[kiri][{{ $idx }}]" class="finger-select" onchange="hitungTotal()">
                   @foreach($allDesigns as $d)
                     <option value="{{ $d->id }}"
-                            data-harga="{{ $d->harga_min / 10 }}"
+                            data-harga="{{ $d->harga_min }}"
                             {{ $d->id == $design->id ? 'selected' : '' }}>
                       {{ $d->nama }}
                     </option>
@@ -267,7 +262,7 @@
                 <select name="pilihan_jari[kanan][{{ $idx }}]" class="finger-select" onchange="hitungTotal()">
                   @foreach($allDesigns as $d)
                     <option value="{{ $d->id }}"
-                            data-harga="{{ $d->harga_min / 10 }}"
+                            data-harga="{{ $d->harga_min }}"
                             {{ $d->id == $design->id ? 'selected' : '' }}>
                       {{ $d->nama }}
                     </option>
@@ -308,23 +303,32 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Tanggal Kunjungan</label>
-          <input type="date" name="tanggal" value="{{ old('tanggal') }}"
-                 min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                 class="{{ $errors->has('tanggal') ? 'is-invalid' : '' }}"/>
-          @error('tanggal') <span class="invalid-feedback">{{ $message }}</span> @enderror
-        </div>
-
-        <div class="form-group">
-          <label>Jam</label>
-          <select name="jam" class="{{ $errors->has('jam') ? 'is-invalid' : '' }}">
-            <option value="">— Pilih jam —</option>
-            @foreach(['09:00','10:00','11:00','13:00','14:00','15:00','16:00'] as $j)
-              <option value="{{ $j }}" {{ old('jam') == $j ? 'selected' : '' }}>{{ $j }}</option>
+        <div class="form-group full">
+          <label>Pilih Jadwal Kunjungan</label>
+          @if($slots->isEmpty())
+            <div style="background:var(--lilac-pale);padding:1rem;font-size:.82rem;color:var(--lilac-deep);border:1px solid rgba(155,135,176,.3)">
+              ⚠️ Belum ada jadwal tersedia. Silakan hubungi admin via WhatsApp untuk info jadwal.
+            </div>
+          @else
+            @foreach($slots as $tgl => $slotGroup)
+              <div style="margin-bottom:1rem">
+                <p style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-bottom:.5rem">
+                  {{ \Carbon\Carbon::parse($tgl)->translatedFormat('l, d F Y') }}
+                </p>
+                <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+                  @foreach($slotGroup as $slot)
+                    <div class="slot-option">
+                      <input type="radio" name="slot_id" id="slot-{{ $slot->id }}"
+                             value="{{ $slot->id }}"
+                             {{ old('slot_id') == $slot->id ? 'checked' : '' }}/>
+                      <label for="slot-{{ $slot->id }}">{{ $slot->jam }}</label>
+                    </div>
+                  @endforeach
+                </div>
+              </div>
             @endforeach
-          </select>
-          @error('jam') <span class="invalid-feedback">{{ $message }}</span> @enderror
+          @endif
+          @error('slot_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
         </div>
 
         <div class="form-group full">
@@ -369,14 +373,7 @@
         </div>
 
         <div class="form-group full">
-  <label>Foto Jari Bersama Koin 500 Perak <span style="color:#e53935">*</span></label>
-
-  <div class="measurement-guide">
-    <img src="{{ asset('images/contoh-ukur-kuku.jpg') }}"
-         alt="Contoh ukur kuku">
-  </div>
-
-  <div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
+          <label>Foto Jari Bersama Koin 500 Perak <span style="color:#e53935">*</span></label>
           <div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
             <input type="file" id="foto-jari-koin" name="foto_jari_koin"
                    accept="image/*" onchange="previewSingle(this,'prev-jari-koin')"/>
@@ -418,7 +415,7 @@
 // Harga per jari dari PHP
 const designPrices = {
   @foreach($allDesigns as $d)
-  {{ $d->id }}: {{ $d->harga_min / 10 }},
+  {{ $d->id }}: {{ $d->harga_min }},
   @endforeach
 };
 const designNames = {

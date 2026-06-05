@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Design;
+use App\Models\Slot;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
 
@@ -12,19 +13,34 @@ class AppointmentController extends Controller
     public function dashboard()
     {
         $appointments = Appointment::where('user_id', auth()->id())
-            ->with('design')
-            ->latest()
-            ->get();
-
+            ->with('design')->latest()->get();
         $testimonials = Testimonial::where('user_id', auth()->id())->get();
-
         return view('dashboard', compact('appointments', 'testimonials'));
     }
 
     public function create(Design $design)
     {
         $allDesigns = Design::orderBy('nama')->get();
-        return view('booking.create', compact('design', 'allDesigns'));
+
+        // Slot tersedia (belum dibook, tanggal >= hari ini)
+        $slots = Slot::where('is_booked', false)
+            ->where('tanggal', '>=', now()->toDateString())
+            ->orderBy('tanggal')->orderBy('jam')
+            ->get()
+            ->groupBy(fn($s) => $s->tanggal->format('Y-m-d'));
+
+        return view('booking.create', compact('design', 'allDesigns', 'slots'));
+    }
+
+    // Return slot tersedia sebagai JSON (untuk live update jika perlu)
+    public function slotsTersedia()
+    {
+        $slots = Slot::where('is_booked', false)
+            ->where('tanggal', '>=', now()->toDateString())
+            ->orderBy('tanggal')->orderBy('jam')
+            ->get(['id', 'tanggal', 'jam']);
+
+        return response()->json($slots);
     }
 
     public function store(Request $request)
@@ -41,8 +57,7 @@ class AppointmentController extends Controller
         ];
 
         if ($tipe === 'nail_art') {
-            $rules['tanggal']        = 'required|date|after:today';
-            $rules['jam']            = 'required';
+            $rules['slot_id']        = 'required|exists:slots,id';
             $rules['metode_bayar']   = 'required';
             $rules['foto_referensi'] = 'nullable|image|max:2048';
         }
@@ -53,33 +68,48 @@ class AppointmentController extends Controller
         }
 
         $request->validate($rules, [
-            'tanggal.after'           => 'Tanggal harus minimal besok.',
+            'slot_id.required'        => 'Pilih jadwal kunjungan.',
             'no_wa.required'          => 'Nomor WhatsApp wajib diisi.',
             'foto_jari_koin.required' => 'Foto jari dengan koin 500 wajib diunggah.',
         ]);
 
-        // Hitung total harga dari pilihan per jari
+        // Ambil data slot
+        $slot   = null;
+        $tanggal = null;
+        $jam     = null;
+
+        if ($tipe === 'nail_art') {
+            $slot = Slot::findOrFail($request->slot_id);
+
+            // Cek slot masih tersedia
+            if ($slot->is_booked) {
+                return redirect()->back()->withErrors(['slot_id' => 'Jadwal ini sudah diambil orang lain, pilih jadwal lain.'])->withInput();
+            }
+
+            $tanggal = $slot->tanggal->format('Y-m-d');
+            $jam     = $slot->jam;
+        }
+
+        // Hitung total harga
         $pilihanJari = $request->pilihan_jari ?? [];
         $totalHarga  = 0;
 
         if (!empty($pilihanJari)) {
             $allDesignIds = collect($pilihanJari)->flatten()->unique()->values();
             $designPrices = Design::whereIn('id', $allDesignIds)->pluck('harga_min', 'id');
-
-            foreach ($pilihanJari as $tangan => $jari) {
+            foreach ($pilihanJari as $jari) {
                 foreach ($jari as $designId) {
-                    $totalHarga += ($designPrices[$designId] ?? 0) / 10;
+                    $totalHarga += ($designPrices[$designId] ?? 0);
                 }
             }
         }
 
-        // Foto referensi single (nail art)
+        // Foto
         $fotoRef = null;
         if ($tipe === 'nail_art' && $request->hasFile('foto_referensi')) {
             $fotoRef = $request->file('foto_referensi')->store('referensi', 'public');
         }
 
-        // Foto referensi multiple (press on)
         $fotoRefList = [];
         if ($tipe === 'press_on' && $request->hasFile('foto_referensi')) {
             foreach ($request->file('foto_referensi') as $foto) {
@@ -87,7 +117,6 @@ class AppointmentController extends Controller
             }
         }
 
-        // Foto jari + koin (press on)
         $fotoJariKoin = null;
         if ($tipe === 'press_on' && $request->hasFile('foto_jari_koin')) {
             $fotoJariKoin = $request->file('foto_jari_koin')->store('jari-koin', 'public');
@@ -99,8 +128,8 @@ class AppointmentController extends Controller
             'user_id'             => auth()->id(),
             'design_id'           => $request->design_id,
             'tipe_order'          => $tipe,
-            'tanggal'             => $tipe === 'nail_art' ? $request->tanggal : null,
-            'jam'                 => $tipe === 'nail_art' ? $request->jam : null,
+            'tanggal'             => $tanggal,
+            'jam'                 => $jam,
             'panjang_kuku'        => $request->panjang_kuku,
             'bentuk_kuku'         => $request->bentuk_kuku,
             'no_wa'               => $request->no_wa,
@@ -113,6 +142,11 @@ class AppointmentController extends Controller
             'pilihan_jari'        => !empty($pilihanJari) ? $pilihanJari : null,
             'total_harga'         => $totalHarga,
         ]);
+
+        // Tandai slot sebagai booked
+        if ($slot) {
+            $slot->update(['is_booked' => true]);
+        }
 
         $msg = $tipe === 'nail_art'
             ? 'Booking nail art berhasil! Admin akan menghubungi kamu untuk konfirmasi DP 50%.'
@@ -127,8 +161,14 @@ class AppointmentController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $appointment->delete();
+        // Bebaskan slot kembali jika nail art
+        if ($appointment->tipe_order === 'nail_art' && $appointment->tanggal && $appointment->jam) {
+            Slot::where('tanggal', $appointment->tanggal)
+                ->where('jam', $appointment->jam)
+                ->update(['is_booked' => false]);
+        }
 
+        $appointment->delete();
         return redirect()->route('dashboard')->with('success', 'Order berhasil dibatalkan.');
     }
 }
