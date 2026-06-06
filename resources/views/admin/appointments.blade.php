@@ -286,6 +286,13 @@ const appointmentsData = {
     no_wa: "{{ $appt->no_wa ?? '' }}",
     tipe: "{{ $isNailArt ? 'Nail Art' : 'Press On Nail' }}",
     desain: "{{ addslashes($appt->design->nama ?? '—') }}",
+    custom_design: {{
+    collect($pilihanJari)
+        ->flatten()
+        ->filter()
+        ->unique()
+        ->count() > 1 ? 'true' : 'false'
+}},
     kategori: "{{ addslashes($appt->design->kategori ?? '') }}",
     panjang_kuku: "{{ $appt->panjang_kuku ?? '—' }}",
     bentuk_kuku: "{{ $appt->bentuk_kuku ?? '—' }}",
@@ -334,8 +341,18 @@ function bukaDetail(id) {
       <div class="detail-item"><p class="detail-label">No. WhatsApp</p><p class="detail-value">${d.no_wa || '<em style="color:var(--gray)">—</em>'}</p></div>
       <div class="detail-item"><p class="detail-label">Tipe Order</p><p class="detail-value">${d.tipe}</p></div>
       <div class="detail-item"><p class="detail-label">Status</p><p class="detail-value">${d.status}</p></div>
-      <div class="detail-item"><p class="detail-label">Desain Utama</p><p class="detail-value">${d.desain}<br><small style="color:var(--gray)">${d.kategori}</small></p></div>
-      <div class="detail-item"><p class="detail-label">Kuku</p><p class="detail-value">${d.panjang_kuku} · ${d.bentuk_kuku}</p></div>
+      <div class="detail-item">
+  <p class="detail-label">Desain Utama</p>
+  <p class="detail-value">
+    ${d.custom_design ? '🎨 Custom Design' : d.desain}
+    ${d.custom_design ? '' : `<br><small style="color:var(--gray)">${d.kategori}</small>`}
+  </p>
+</div>
+
+<div class="detail-item">
+  <p class="detail-label">Kuku</p>
+  <p class="detail-value">${d.panjang_kuku} · ${d.bentuk_kuku}</p>
+</div>
       <div class="detail-item"><p class="detail-label">Jadwal</p><p class="detail-value">${d.tanggal}${d.jam ? ' · ' + d.jam : ''}</p></div>
       <div class="detail-item"><p class="detail-label">Pembayaran</p><p class="detail-value">${d.metode_bayar}<br><small style="color:var(--lilac-deep)">Total: Rp ${d.total_harga.toLocaleString('id-ID')}</small><br><small style="color:var(--olive)">${dpLabel}: Rp ${dp.toLocaleString('id-ID')}</small></p></div>
     </div>`;
