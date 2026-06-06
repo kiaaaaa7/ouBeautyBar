@@ -298,7 +298,7 @@
 
         <div class="form-group full">
           <div class="info-box">
-            💳 <strong>Nail Art — Bayar DP 50%.</strong>
+            💳 <strong>Nail Art — Bayar DP 50% atau Lunas.</strong>
             Admin akan menghubungi kamu via WhatsApp untuk konfirmasi jadwal dan nominal DP.
           </div>
         </div>
@@ -332,19 +332,53 @@
         </div>
 
         <div class="form-group full">
-          <label>Metode Pembayaran DP</label>
+          <label>Metode Pembayaran</label>
           <div class="payment-options">
             @foreach(['Transfer Bank','QRIS','Bayar di Tempat'] as $m)
               <div class="payment-option">
-                <input type="radio" name="metode_bayar" id="pay{{ $loop->index }}"
-                       value="{{ $m }}" {{ old('metode_bayar') == $m ? 'checked' : '' }}/>
-                <label for="pay{{ $loop->index }}">
+                <input type="radio" name="metode_bayar" id="pay-na-{{ $loop->index }}"
+                       value="{{ $m }}" {{ old('metode_bayar') == $m ? 'checked' : '' }}
+                       onchange="showPaymentInfo('nail_art', '{{ $m }}')"/>
+                <label for="pay-na-{{ $loop->index }}">
                   {{ $m === 'Transfer Bank' ? '🏦' : ($m === 'QRIS' ? '📱' : '💵') }}<br>{{ $m }}
                 </label>
               </div>
             @endforeach
           </div>
           @error('metode_bayar') <span class="invalid-feedback">{{ $message }}</span> @enderror
+        </div>
+
+        {{-- INFO PEMBAYARAN NAIL ART --}}
+        <div class="form-group full" id="pay-info-na" style="display:none">
+          <div id="pay-info-na-transfer" class="pay-detail" style="display:none">
+            <div class="info-box">
+              🏦 <strong>Transfer BCA</strong><br>
+              No. Rekening: <strong>2802411678</strong><br>
+              a.n. <strong>Maudy E</strong><br>
+              <span style="font-size:.75rem;color:var(--gray)">Nominal sesuai DP atau total yang dikonfirmasi admin.</span>
+            </div>
+          </div>
+          <div id="pay-info-na-qris" class="pay-detail" style="display:none">
+            <div class="info-box" style="text-align:center">
+              📱 <strong>Scan QRIS di bawah</strong><br>
+              <img src="{{ asset('images/qris.jpeg') }}" alt="QRIS OU Beauty Bar"
+                   style="width:200px;margin-top:.8rem;border-radius:4px;"/>
+            </div>
+          </div>
+        </div>
+
+        {{-- UPLOAD BUKTI BAYAR NAIL ART --}}
+        <div class="form-group full" id="upload-bukti-na" style="display:none">
+          <label>Upload Bukti Pembayaran <span style="color:#e53935">*</span></label>
+          <div class="upload-area" onclick="document.getElementById('bukti-bayar-na').click()">
+            <input type="file" id="bukti-bayar-na" name="bukti_bayar"
+                   accept="image/*" onchange="previewSingle(this,'prev-bukti-na')"/>
+            <span class="upload-icon">🧾</span>
+            <p class="upload-text">Upload screenshot/foto bukti transfer atau QRIS</p>
+            <p class="upload-hint">JPG, PNG, maks. 2MB</p>
+            <img id="prev-bukti-na" class="preview-single" src="" alt="Preview Bukti"/>
+          </div>
+          @error('bukti_bayar') <span class="invalid-feedback">{{ $message }}</span> @enderror
         </div>
 
         <div class="form-group full">
@@ -368,8 +402,58 @@
         <div class="form-group full">
           <div class="info-box">
             💳 <strong>Press On Nail — Bayar lunas.</strong>
-            Admin akan menghubungi kamu via WhatsApp untuk info rekening dan ongkir.
+            Admin akan menghubungi kamu via WhatsApp untuk konfirmasi total + ongkir sebelum kamu transfer.
           </div>
+        </div>
+
+        <div class="form-group full">
+          <label>Metode Pembayaran</label>
+          <div class="payment-options" style="grid-template-columns:1fr 1fr">
+            @foreach(['Transfer Bank','QRIS'] as $m)
+              <div class="payment-option">
+                <input type="radio" name="metode_bayar" id="pay-po-{{ $loop->index }}"
+                       value="{{ $m }}" {{ old('metode_bayar') == $m ? 'checked' : '' }}
+                       onchange="showPaymentInfo('press_on', '{{ $m }}')"/>
+                <label for="pay-po-{{ $loop->index }}">
+                  {{ $m === 'Transfer Bank' ? '🏦' : '📱' }}<br>{{ $m }}
+                </label>
+              </div>
+            @endforeach
+          </div>
+          @error('metode_bayar') <span class="invalid-feedback">{{ $message }}</span> @enderror
+        </div>
+
+        {{-- INFO PEMBAYARAN PRESS ON --}}
+        <div class="form-group full" id="pay-info-po" style="display:none">
+          <div id="pay-info-po-transfer" class="pay-detail" style="display:none">
+            <div class="info-box">
+              🏦 <strong>Transfer BCA</strong><br>
+              No. Rekening: <strong>2802411678</strong><br>
+              a.n. <strong>Maudy E</strong><br>
+              <span style="font-size:.75rem;color:var(--gray)">Transfer setelah admin konfirmasi total + ongkir via WhatsApp.</span>
+            </div>
+          </div>
+          <div id="pay-info-po-qris" class="pay-detail" style="display:none">
+            <div class="info-box" style="text-align:center">
+              📱 <strong>Scan QRIS di bawah</strong><br>
+              <img src="{{ asset('images/qris.jpeg') }}" alt="QRIS OU Beauty Bar"
+                   style="width:200px;margin-top:.8rem;border-radius:4px;"/>
+            </div>
+          </div>
+        </div>
+
+        {{-- UPLOAD BUKTI BAYAR PRESS ON --}}
+        <div class="form-group full" id="upload-bukti-po" style="display:none">
+          <label>Upload Bukti Pembayaran <span style="color:#e53935">*</span></label>
+          <div class="upload-area" onclick="document.getElementById('bukti-bayar-po').click()">
+            <input type="file" id="bukti-bayar-po" name="bukti_bayar"
+                   accept="image/*" onchange="previewSingle(this,'prev-bukti-po')"/>
+            <span class="upload-icon">🧾</span>
+            <p class="upload-text">Upload screenshot/foto bukti transfer atau QRIS</p>
+            <p class="upload-hint">JPG, PNG, maks. 2MB</p>
+            <img id="prev-bukti-po" class="preview-single" src="" alt="Preview Bukti"/>
+          </div>
+          @error('bukti_bayar') <span class="invalid-feedback">{{ $message }}</span> @enderror
         </div>
 
         <div class="form-group full">
@@ -425,9 +509,33 @@ const designNames = {
 };
 
 // Tipe order aktif
-let tipeAktif = '{{ old('tipe_order', 'nail_art') }}';
+let tipeAktif = "{{ old('tipe_order', 'nail_art') }}";
 
-function switchTipe(tipe) {
+function showPaymentInfo(tipe, metode) {
+  const prefix = tipe === 'nail_art' ? 'na' : 'po';
+  const infoBox = document.getElementById('pay-info-' + prefix);
+  const uploadBox = document.getElementById('upload-bukti-' + prefix);
+
+  // Sembunyikan semua detail dulu
+  document.querySelectorAll('#pay-info-' + prefix + ' .pay-detail').forEach(el => el.style.display = 'none');
+
+  if (metode === 'Transfer Bank') {
+    infoBox.style.display = 'block';
+    document.getElementById('pay-info-' + prefix + '-transfer').style.display = 'block';
+    uploadBox.style.display = 'block';
+  } else if (metode === 'QRIS') {
+    infoBox.style.display = 'block';
+    document.getElementById('pay-info-' + prefix + '-qris').style.display = 'block';
+    uploadBox.style.display = 'block';
+  } else {
+    // Bayar di Tempat
+    infoBox.style.display = 'none';
+    uploadBox.style.display = 'none';
+  }
+}
+
+
+  function switchTipe(tipe) {
   tipeAktif = tipe;
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + tipe.replace('_', '-')).classList.add('active');

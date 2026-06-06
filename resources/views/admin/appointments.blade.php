@@ -79,6 +79,7 @@
     <li><a href="{{ route('admin.index') }}">📊 Dashboard</a></li>
     <li><a href="{{ route('admin.appointments') }}" class="active">📅 Appointments</a></li>
     <li><a href="{{ route('admin.designs') }}">💅 Desain</a></li>
+    <li><a href="{{ route('admin.customers') }}">👥 Customer</a></li>
   </ul>
   <div class="sidebar-bottom">
     <form action="{{ route('logout') }}" method="POST">

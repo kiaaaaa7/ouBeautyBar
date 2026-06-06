@@ -26,6 +26,9 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
 
+    // Customers
+    Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
+
     // Appointments
     Route::get('/appointments', [AdminController::class, 'appointments'])->name('appointments');
     Route::patch('/appointments/{id}/status', [AdminController::class, 'updateStatus'])->name('appointments.status');

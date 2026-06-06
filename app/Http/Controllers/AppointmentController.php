@@ -122,6 +122,12 @@ class AppointmentController extends Controller
             $fotoJariKoin = $request->file('foto_jari_koin')->store('jari-koin', 'public');
         }
 
+        // Bukti bayar
+        $buktiBayar = null;
+        if ($request->hasFile('bukti_bayar')) {
+            $buktiBayar = $request->file('bukti_bayar')->store('bukti-bayar', 'public');
+        }
+
         $metodeBayar = $tipe === 'nail_art' ? $request->metode_bayar : 'Transfer Bank';
 
         Appointment::create([
@@ -139,6 +145,7 @@ class AppointmentController extends Controller
             'foto_referensi'      => $fotoRef,
             'foto_referensi_list' => !empty($fotoRefList) ? $fotoRefList : null,
             'foto_jari_koin'      => $fotoJariKoin,
+            'bukti_bayar'         => $buktiBayar,
             'pilihan_jari'        => !empty($pilihanJari) ? $pilihanJari : null,
             'total_harga'         => $totalHarga,
         ]);

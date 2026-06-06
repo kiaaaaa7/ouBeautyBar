@@ -25,6 +25,23 @@ class AdminController extends Controller
         ));
     }
 
+    public function customers(Request $request)
+    {
+        $query = User::where('is_admin', false)
+            ->with(['appointments'])
+            ->orderBy('name');
+
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                  ->orWhere('email', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        $customers = $query->get();
+        return view('admin.customers', compact('customers'));
+    }
+
     public function appointments(Request $request)
     {
         $query = Appointment::with(['user', 'design'])->latest();

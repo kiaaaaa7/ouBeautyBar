@@ -24,7 +24,7 @@ class AuthenticatedSessionController extends Controller
 
         $user = auth()->user();
 
-        if ($user->role === 'admin') {
+        if ($user->is_admin) {
             return redirect()->route('admin.index');
         }
 

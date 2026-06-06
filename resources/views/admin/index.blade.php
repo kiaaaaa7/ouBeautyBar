@@ -71,11 +71,11 @@
       <h3>Kelola Appointment</h3>
       <p>Lihat, konfirmasi, dan hapus appointment customer</p>
     </a>
-    <a href="{{ route('admin.designs') }}" class="quick-card">
-      <span class="quick-icon">💅</span>
-      <h3>Kelola Desain</h3>
-      <p>Tambah dan hapus katalog desain nail art</p>
-    </a>
+    <a href="{{ route('admin.customers') }}" class="quick-card">
+  <span class="quick-icon">👥</span>
+  <h3>Data Customer</h3>
+  <p>Lihat daftar customer dan hubungi via WhatsApp</p>
+</a>
   </div>
 </div>
 </body>
