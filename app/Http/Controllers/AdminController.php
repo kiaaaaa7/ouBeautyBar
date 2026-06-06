@@ -119,6 +119,64 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'Slot berhasil ditambahkan!');
     }
+    public function generateSlots(Request $request)
+{
+    $request->validate([
+        'tanggal_mulai' => 'required|date'
+    ]);
+
+    $jamDefault = [
+        '09:00',
+        '10:00',
+        '11:00',
+        '13:00',
+        '14:00',
+        '15:00',
+        '16:00',
+    ];
+
+    $startDate = \Carbon\Carbon::parse($request->tanggal_mulai);
+
+    for ($i = 0; $i < 7; $i++) {
+
+        $tanggal = $startDate->copy()
+            ->addDays($i)
+            ->format('Y-m-d');
+
+        foreach ($jamDefault as $jam) {
+
+            Slot::firstOrCreate(
+                [
+                    'tanggal' => $tanggal,
+                    'jam' => $jam
+                ],
+                [
+                    'is_booked' => false
+                ]
+            );
+        }
+    }
+
+    return back()->with(
+        'success',
+        'Slot 7 hari berhasil dibuat!'
+    );
+}
+public function deleteSlotsByDate(Request $request)
+{
+    $request->validate([
+        'tanggal' => 'required|date'
+    ]);
+
+    Slot::whereDate('tanggal', $request->tanggal)
+        ->where('is_booked', false)
+        ->delete();
+
+    return back()->with(
+        'success',
+        'Semua slot tanggal '.$request->tanggal.' berhasil dihapus!'
+    );
+}
 
     // Hapus slot
     public function destroySlot($id)

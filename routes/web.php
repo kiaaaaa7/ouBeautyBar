@@ -21,6 +21,12 @@ Route::middleware(['auth'])->group(function () {
     // Ambil slot tersedia (untuk form booking)
     Route::get('/slots-tersedia', [AppointmentController::class, 'slotsTersedia'])->name('slots.tersedia');
 });
+Route::post('/admin/slots/generate', [AdminController::class, 'generateSlots'])
+    ->name('admin.slots.generate');
+
+Route::delete('/slots/delete-date',
+    [AdminController::class, 'deleteSlotsByDate'])
+    ->name('admin.slots.deleteDate');
 
 // Admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {

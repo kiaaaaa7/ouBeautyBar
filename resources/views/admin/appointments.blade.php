@@ -38,6 +38,35 @@
     .jam-cb:checked + label { background: var(--olive); color: white; border-color: var(--olive); }
     .btn-add-slot { background: var(--olive); color: white; border: none; padding: .6rem 1.4rem; cursor: pointer; font-family: inherit; font-size: .82rem; border-radius: 4px; transition: background .2s; }
     .btn-add-slot:hover { background: var(--olive-light); }
+    .btn-generate {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: .6rem 1.4rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .82rem;
+  border-radius: 4px;
+}
+
+.btn-generate:hover {
+  opacity: .9;
+}
+
+.btn-danger {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: .6rem 1.4rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .82rem;
+  border-radius: 4px;
+}
+
+.btn-danger:hover {
+  opacity: .9;
+}
     .slot-list { display: flex; flex-wrap: wrap; gap: .5rem; }
     .slot-item { display: flex; align-items: center; gap: .5rem; background: var(--olive-pale); padding: .4rem .8rem; border-radius: 4px; font-size: .78rem; }
     .slot-item.booked { background: var(--lilac-pale); color: var(--lilac-deep); }
@@ -122,6 +151,43 @@
   {{-- SLOT --}}
   <div class="slot-section">
     <h2>Kelola <em>Slot Jadwal</em></h2>
+    <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap">
+
+  <form action="{{ route('admin.slots.generate') }}"
+      method="POST"
+      style="display:flex;gap:10px;align-items:center">
+
+    @csrf
+
+    <input type="date"
+           name="tanggal_mulai"
+           required
+           style="padding:.6rem;border:1px solid #ddd;border-radius:4px">
+
+    <button type="submit" class="btn-generate">
+        ⚡ Generate 7 Hari
+    </button>
+</form>
+
+  <form action="{{ route('admin.slots.deleteDate') }}"
+      method="POST"
+      onsubmit="return confirm('Hapus semua slot pada tanggal ini?')"
+      style="display:flex;gap:10px;align-items:center">
+
+    @csrf
+    @method('DELETE')
+
+    <input type="date"
+           name="tanggal"
+           required
+           style="padding:.6rem;border:1px solid #ddd;border-radius:4px">
+
+    <button type="submit"
+            class="btn-danger">
+        🗑 Hapus Semua Slot Tanggal Ini
+    </button>
+</form>
+</div>
     <form action="{{ route('admin.slots.store') }}" method="POST">
       @csrf
       <div class="slot-form">
