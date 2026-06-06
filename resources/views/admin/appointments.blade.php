@@ -95,9 +95,15 @@
 <div class="sidebar">
   <a class="sidebar-logo" href="/"><div class="logo-badge">OU</div> Beauty Bar</a>
   <ul class="sidebar-menu">
-    <li><a href="{{ route('admin.index') }}">📊 Dashboard</a></li>
-    <li><a href="{{ route('admin.appointments') }}" class="active">📅 Appointments</a></li>
-    <li><a href="{{ route('admin.designs') }}">💅 Desain</a></li>
+    <li>
+  <a href="{{ route('admin.appointments') }}" class="active" style="display:flex;justify-content:space-between;align-items:center">
+    📅 Appointments
+    @php $pendingCount = \App\Models\Appointment::where('status','Pending')->count(); @endphp
+    @if($pendingCount > 0)
+      <span style="background:#e53935;color:white;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;">{{ $pendingCount }}</span>
+    @endif
+  </a>
+</li>
     <li><a href="{{ route('admin.customers') }}">👥 Customer</a></li>
   </ul>
   <div class="sidebar-bottom">
