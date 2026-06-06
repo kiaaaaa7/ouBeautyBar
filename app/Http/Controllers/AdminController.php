@@ -13,28 +13,52 @@ use Illuminate\Support\Facades\Storage;
 class AdminController extends Controller
 {
     public function index()
-{
-    $totalAppointments   = Appointment::count();
-    $totalCustomers      = User::where('role', 'customer')->count();
-    $totalDesigns        = Design::count();
-    $pendingAppointments = Appointment::where('status', 'Pending')->count();
+    {
+        $totalAppointments   = Appointment::count();
+        $totalCustomers      = User::where('is_admin', false)->count();
+        $totalDesigns        = Design::count();
+        $pendingAppointments = Appointment::where('status', 'Pending')->count();
+        $upcomingAppointments = Appointment::with('user')
+            ->whereNotNull('tanggal')
+            ->where('tanggal', '>=', now()->toDateString())
+            ->where('status', '!=', 'Selesai')
+            ->orderBy('tanggal')->orderBy('jam')
+            ->take(5)->get();
 
-    $upcomingAppointments = Appointment::with('user')
-        ->whereNotNull('tanggal')
-        ->where('status', '!=', 'Selesai')
-        ->orderBy('tanggal')
-        ->orderBy('jam')
-        ->take(5)
-        ->get();
+        return view('admin.index', compact(
+            'totalAppointments', 'totalCustomers',
+            'totalDesigns', 'pendingAppointments',
+            'upcomingAppointments'
+        ));
+    }
 
-    return view('admin.index', compact(
-        'totalAppointments',
-        'totalCustomers',
-        'totalDesigns',
-        'pendingAppointments',
-        'upcomingAppointments'
-    ));
-}
+    public function uploadFotoTestimoni(Request $request, $id)
+    {
+        $request->validate([
+            'foto_hasil.*' => 'required|image|max:2048',
+        ]);
+
+        $testimonial = \App\Models\Testimonial::findOrFail($id);
+
+        $fotos = $testimonial->foto_hasil ?? [];
+        foreach ($request->file('foto_hasil') as $foto) {
+            $fotos[] = $foto->store('testimoni-hasil', 'public');
+        }
+
+        // Auto-tag dari appointment terakhir customer yang selesai
+        $appointment = \App\Models\Appointment::where('user_id', $testimonial->user_id)
+            ->where('status', 'Selesai')
+            ->latest()->first();
+
+        $testimonial->update([
+            'foto_hasil'   => $fotos,
+            'design_id'    => $request->design_id ?? $appointment?->design_id,
+            'bentuk_kuku'  => $request->bentuk_kuku ?? $appointment?->bentuk_kuku,
+            'panjang_kuku' => $request->panjang_kuku ?? $appointment?->panjang_kuku,
+        ]);
+
+        return redirect()->back()->with('success', 'Foto hasil berhasil diupload!');
+    }
 
     public function customers(Request $request)
     {
@@ -59,6 +83,9 @@ class AdminController extends Controller
 
         if ($request->status) {
             $query->where('status', $request->status);
+        }
+        if ($request->status_bayar) {
+            $query->where('status_bayar', $request->status_bayar);
         }
         if ($request->search) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', '%'.$request->search.'%'));
@@ -102,6 +129,13 @@ class AdminController extends Controller
         }
         $slot->delete();
         return redirect()->back()->with('success', 'Slot berhasil dihapus.');
+    }
+
+    public function updateBayar(Request $request, $id)
+    {
+        $request->validate(['status_bayar' => 'required|in:Belum Bayar,DP,Lunas']);
+        Appointment::findOrFail($id)->update(['status_bayar' => $request->status_bayar]);
+        return redirect()->back()->with('success', 'Status pembayaran berhasil diupdate!');
     }
 
     public function updateStatus(Request $request, $id)
@@ -207,29 +241,4 @@ class AdminController extends Controller
         $design->delete();
         return redirect()->back()->with('success', 'Desain berhasil dihapus.');
     }
-    public function rekap()
-{
-    $rekapBulanan = Appointment::selectRaw("
-        MONTH(created_at) as bulan,
-        YEAR(created_at) as tahun,
-
-        SUM(CASE
-            WHEN tipe_order = 'nail_art'
-            THEN 1 ELSE 0
-        END) as total_nail_art,
-
-        SUM(CASE
-            WHEN tipe_order = 'press_on'
-            THEN 1 ELSE 0
-        END) as total_press_on,
-
-        COUNT(*) as total_pesanan
-    ")
-    ->groupBy('tahun', 'bulan')
-    ->orderBy('tahun', 'desc')
-    ->orderBy('bulan', 'desc')
-    ->get();
-
-    return view('admin.rekap', compact('rekapBulanan'));
-}
 }

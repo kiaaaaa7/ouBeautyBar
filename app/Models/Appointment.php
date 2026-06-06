@@ -15,7 +15,7 @@ class Appointment extends Model
         'tanggal', 'jam',
         'panjang_kuku', 'bentuk_kuku',
         'no_wa',
-        'metode_bayar', 'status',
+        'metode_bayar', 'status', 'status_bayar',
         'catatan',
         'foto_referensi',
         'foto_referensi_list',

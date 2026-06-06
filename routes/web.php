@@ -25,7 +25,9 @@ Route::middleware(['auth'])->group(function () {
 // Admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');
-    Route::get('/rekap', [AdminController::class, 'rekap'])->name('rekap');
+
+    // Testimonial — upload foto hasil
+    Route::post('/testimonials/{id}/foto', [AdminController::class, 'uploadFotoTestimoni'])->name('testimonials.foto');
 
     // Customers
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
@@ -33,6 +35,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Appointments
     Route::get('/appointments', [AdminController::class, 'appointments'])->name('appointments');
     Route::patch('/appointments/{id}/status', [AdminController::class, 'updateStatus'])->name('appointments.status');
+    Route::patch('/appointments/{id}/bayar', [AdminController::class, 'updateBayar'])->name('appointments.bayar');
     Route::delete('/appointments/{id}', [AdminController::class, 'destroy'])->name('appointments.destroy');
 
     // Slot management

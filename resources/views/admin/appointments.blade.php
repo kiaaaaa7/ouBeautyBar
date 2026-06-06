@@ -68,7 +68,9 @@
     .btn-del:hover { background: var(--lilac-deep); color: white; border-color: var(--lilac-deep); }
     .btn-detail { background: none; border: 1px solid rgba(92,107,58,.3); padding: .35rem .8rem; font-size: .72rem; cursor: pointer; color: var(--olive); border-radius: 4px; font-family: inherit; transition: all .2s; }
     .btn-detail:hover { background: var(--olive-pale); }
-    .empty-state { text-align: center; padding: 3rem; color: var(--gray); }
+    .badge-belum { background: #fff3e0; color: #e65100; }
+    .badge-dp { background: var(--lilac-pale); color: var(--lilac-deep); }
+    .badge-lunas { background: var(--olive-pale); color: var(--olive); }
 
     /* MODAL */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -95,15 +97,9 @@
 <div class="sidebar">
   <a class="sidebar-logo" href="/"><div class="logo-badge">OU</div> Beauty Bar</a>
   <ul class="sidebar-menu">
-    <li>
-  <a href="{{ route('admin.appointments') }}" class="active" style="display:flex;justify-content:space-between;align-items:center">
-    📅 Appointments
-    @php $pendingCount = \App\Models\Appointment::where('status','Pending')->count(); @endphp
-    @if($pendingCount > 0)
-      <span style="background:#e53935;color:white;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;">{{ $pendingCount }}</span>
-    @endif
-  </a>
-</li>
+    <li><a href="{{ route('admin.index') }}">📊 Dashboard</a></li>
+    <li><a href="{{ route('admin.appointments') }}" class="active">📅 Appointments</a></li>
+    <li><a href="{{ route('admin.designs') }}">💅 Desain</a></li>
     <li><a href="{{ route('admin.customers') }}">👥 Customer</a></li>
   </ul>
   <div class="sidebar-bottom">
@@ -175,6 +171,12 @@
   {{-- FILTER --}}
   <form method="GET" action="{{ route('admin.appointments') }}" class="filter-bar">
     <input type="text" name="search" placeholder="Cari nama customer..." value="{{ request('search') }}"/>
+    <select name="status_bayar">
+      <option value="">Semua Pembayaran</option>
+      <option value="Belum Bayar" {{ request("status_bayar") == "Belum Bayar" ? "selected" : "" }}>Belum Bayar</option>
+      <option value="DP" {{ request("status_bayar") == "DP" ? "selected" : "" }}>DP</option>
+      <option value="Lunas" {{ request("status_bayar") == "Lunas" ? "selected" : "" }}>Lunas</option>
+    </select>
     <select name="status">
       <option value="">Semua Status</option>
       @foreach(['Pending','Konfirmasi','Selesai'] as $s)
@@ -194,7 +196,7 @@
           <tr>
             <th>#</th><th>Customer</th><th>Desain</th>
             <th>Tipe</th><th>Jadwal</th><th>Bayar</th>
-            <th>Status</th><th>Aksi</th>
+            <th>Status Bayar</th><th>Status</th><th>Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -231,6 +233,17 @@
               @if($appt->total_harga)
                 <small style="color:var(--lilac-deep)">Rp {{ number_format($appt->total_harga, 0, ',', '.') }}</small>
               @endif
+            </td>
+            <td>
+              <form action="{{ route('admin.appointments.bayar', $appt->id) }}" method="POST">
+                @csrf @method('PATCH')
+                <select name="status_bayar" class="status-select" onchange="this.form.submit()"
+                        style="border-color: {{ ($appt->status_bayar ?? 'Belum Bayar') === 'Lunas' ? 'var(--olive)' : (($appt->status_bayar ?? 'Belum Bayar') === 'DP' ? 'var(--lilac-deep)' : '#e65100') }}">
+                  @foreach(['Belum Bayar','DP','Lunas'] as $sb)
+                    <option value="{{ $sb }}" {{ ($appt->status_bayar ?? 'Belum Bayar') == $sb ? 'selected' : '' }}>{{ $sb }}</option>
+                  @endforeach
+                </select>
+              </form>
             </td>
             <td><span class="badge badge-{{ strtolower($appt->status) }}">{{ $appt->status }}</span></td>
             <td>
@@ -286,13 +299,6 @@ const appointmentsData = {
     no_wa: "{{ $appt->no_wa ?? '' }}",
     tipe: "{{ $isNailArt ? 'Nail Art' : 'Press On Nail' }}",
     desain: "{{ addslashes($appt->design->nama ?? '—') }}",
-    custom_design: {{
-    collect($pilihanJari)
-        ->flatten()
-        ->filter()
-        ->unique()
-        ->count() > 1 ? 'true' : 'false'
-}},
     kategori: "{{ addslashes($appt->design->kategori ?? '') }}",
     panjang_kuku: "{{ $appt->panjang_kuku ?? '—' }}",
     bentuk_kuku: "{{ $appt->bentuk_kuku ?? '—' }}",
@@ -341,18 +347,8 @@ function bukaDetail(id) {
       <div class="detail-item"><p class="detail-label">No. WhatsApp</p><p class="detail-value">${d.no_wa || '<em style="color:var(--gray)">—</em>'}</p></div>
       <div class="detail-item"><p class="detail-label">Tipe Order</p><p class="detail-value">${d.tipe}</p></div>
       <div class="detail-item"><p class="detail-label">Status</p><p class="detail-value">${d.status}</p></div>
-      <div class="detail-item">
-  <p class="detail-label">Desain Utama</p>
-  <p class="detail-value">
-    ${d.custom_design ? '🎨 Custom Design' : d.desain}
-    ${d.custom_design ? '' : `<br><small style="color:var(--gray)">${d.kategori}</small>`}
-  </p>
-</div>
-
-<div class="detail-item">
-  <p class="detail-label">Kuku</p>
-  <p class="detail-value">${d.panjang_kuku} · ${d.bentuk_kuku}</p>
-</div>
+      <div class="detail-item"><p class="detail-label">Desain Utama</p><p class="detail-value">${d.desain}<br><small style="color:var(--gray)">${d.kategori}</small></p></div>
+      <div class="detail-item"><p class="detail-label">Kuku</p><p class="detail-value">${d.panjang_kuku} · ${d.bentuk_kuku}</p></div>
       <div class="detail-item"><p class="detail-label">Jadwal</p><p class="detail-value">${d.tanggal}${d.jam ? ' · ' + d.jam : ''}</p></div>
       <div class="detail-item"><p class="detail-label">Pembayaran</p><p class="detail-value">${d.metode_bayar}<br><small style="color:var(--lilac-deep)">Total: Rp ${d.total_harga.toLocaleString('id-ID')}</small><br><small style="color:var(--olive)">${dpLabel}: Rp ${dp.toLocaleString('id-ID')}</small></p></div>
     </div>`;

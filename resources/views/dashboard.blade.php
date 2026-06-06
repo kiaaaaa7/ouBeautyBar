@@ -260,7 +260,7 @@
   <!-- TESTIMONI -->
   <div class="testi-section">
     <p class="section-label">✦ Tulis Testimoni</p>
-    <form action="{{ route('testimonial.store') }}" method="POST">
+    <form action="{{ route('testimonial.store') }}" method="POST" enctype="multipart/form-data">
       @csrf
       <div class="form-group">
         <label>Rating</label>
@@ -274,6 +274,19 @@
         @error('rating') <span class="invalid-feedback">{{ $message }}</span> @enderror
       </div>
       <div class="form-group">
+        <label>Foto (opsional, bisa lebih dari 1)</label>
+        <div class="upload-area" onclick="document.getElementById('foto-testi').click()"
+             style="border: 2px dashed rgba(155,135,176,.4); padding: 1.2rem; text-align: center; background: var(--lilac-pale); cursor: pointer; border-radius: 4px;">
+          <input type="file" id="foto-testi" name="foto_testi[]"
+                 accept="image/*" multiple style="display:none"
+                 onchange="previewTestiFoto(this)"/>
+          <span style="font-size:1.5rem">📷</span>
+          <p style="font-size:.8rem;color:var(--gray);margin-top:.3rem">Klik untuk upload foto hasil nail art kamu</p>
+          <p style="font-size:.72rem;color:var(--lilac-deep);margin-top:.2rem">JPG, PNG, maks. 2MB per foto</p>
+          <div id="preview-testi-foto" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.6rem;justify-content:center"></div>
+        </div>
+      </div>
+      <div class="form-group">
         <label>Ceritakan Pengalamanmu</label>
         <textarea name="isi" class="{{ $errors->has('isi') ? 'is-invalid' : '' }}"
                   placeholder="Bagaimana pengalaman kamu di OU Beauty Bar?">{{ old('isi') }}</textarea>
@@ -284,5 +297,21 @@
   </div>
 </div>
 
+<script>
+function previewTestiFoto(input) {
+  const container = document.getElementById('preview-testi-foto');
+  container.innerHTML = '';
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid rgba(92,107,58,.2)';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+</script>
 </body>
 </html>
