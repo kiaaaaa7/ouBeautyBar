@@ -80,6 +80,74 @@
     .quick-card h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; margin-bottom: .3rem; }
     .quick-card p { font-size: .82rem; color: var(--gray); }
     .quick-card-badge { position: absolute; top: 1rem; right: 1rem; background: #e53935; color: white; font-size: .7rem; font-weight: 700; padding: .3rem .7rem; border-radius: 10px; }
+    .reminder-card{
+  margin-top:20px;
+  background:white;
+  border-radius:8px;
+  padding:24px;
+  border:1px solid rgba(92,107,58,.1);
+}
+
+.reminder-title{
+  font-family:'Playfair Display', serif;
+  font-size:1.4rem;
+  margin-bottom:18px;
+  color:var(--olive);
+}
+
+.reminder-item{
+  display:flex;
+  align-items:flex-start;
+  gap:15px;
+  padding:12px 0;
+  border-bottom:1px solid rgba(0,0,0,.06);
+}
+
+.reminder-item:last-child{
+  border-bottom:none;
+}
+
+.reminder-icon{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--olive-pale);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+  flex-shrink:0;
+}
+
+.reminder-info{
+  flex:1;
+}
+
+.reminder-name{
+  font-weight:600;
+  color:var(--dark);
+}
+
+.reminder-meta{
+  font-size:.82rem;
+  color:var(--gray);
+  margin-top:4px;
+}
+
+.reminder-badge{
+  background:#E8EDD8;
+  color:var(--olive);
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.empty-reminder{
+  text-align:center;
+  color:var(--gray);
+  padding:20px;
+}
   </style>
 </head>
 <body>
@@ -137,20 +205,70 @@
     <div class="stat-card"><span class="stat-icon">💅</span><span class="stat-num">{{ $totalDesigns }}</span><span class="stat-label">Total Desain</span></div>
   </div>
   <div class="quick-links">
-    <a href="{{ route('admin.appointments') }}" class="quick-card">
-      @if($pendingAppointments > 0)
-        <span class="quick-card-badge">{{ $pendingAppointments }} Pending</span>
-      @endif
-      <span class="quick-icon">📅</span>
-      <h3>Kelola Appointment</h3>
-      <p>Lihat, konfirmasi, dan hapus appointment customer</p>
+
+    <a href="{{ route('admin.rekap') }}" class="quick-card">
+      <span class="quick-icon">📊</span>
+      <h3>Rekap Pemesanan</h3>
+      <p>Lihat statistik dan laporan pemesanan setiap bulan</p>
     </a>
+
     <a href="{{ route('admin.customers') }}" class="quick-card">
-  <span class="quick-icon">👥</span>
-  <h3>Data Customer</h3>
-  <p>Lihat daftar customer dan hubungi via WhatsApp</p>
-</a>
-  </div>
+      <span class="quick-icon">👥</span>
+      <h3>Data Customer</h3>
+      <p>Lihat daftar customer dan hubungi via WhatsApp</p>
+    </a>
+
+</div>
+<div class="reminder-card">
+    <h3 class="reminder-title">
+        ⏰ Reminder Appointment Terdekat
+    </h3>
+
+    @forelse($upcomingAppointments as $item)
+
+    <div class="reminder-item">
+
+        <div class="reminder-icon">
+            {{ $item->tipe_order === 'press_on' ? '📦' : '💅' }}
+        </div>
+
+        <div class="reminder-info">
+
+            <div class="reminder-name">
+                {{ $item->user->name }}
+            </div>
+
+            <div class="reminder-meta">
+                {{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}
+
+                @if($item->jam)
+                    • {{ $item->jam }}
+                @endif
+
+                <br>
+
+                {{ $item->tipe_order === 'press_on'
+                    ? 'Press On Nail'
+                    : 'Nail Art Appointment' }}
+            </div>
+
+        </div>
+
+        <span class="reminder-badge">
+            {{ $item->status }}
+        </span>
+
+    </div>
+
+    @empty
+
+    <div class="empty-reminder">
+        🎉 Tidak ada appointment yang perlu diperhatikan.
+    </div>
+
+    @endforelse
+
+</div>
 </div>
 
 <script>

@@ -13,17 +13,28 @@ use Illuminate\Support\Facades\Storage;
 class AdminController extends Controller
 {
     public function index()
-    {
-        $totalAppointments   = Appointment::count();
-        $totalCustomers      = User::where('role', 'customer')->count();
-        $totalDesigns        = Design::count();
-        $pendingAppointments = Appointment::where('status', 'Pending')->count();
+{
+    $totalAppointments   = Appointment::count();
+    $totalCustomers      = User::where('role', 'customer')->count();
+    $totalDesigns        = Design::count();
+    $pendingAppointments = Appointment::where('status', 'Pending')->count();
 
-        return view('admin.index', compact(
-            'totalAppointments', 'totalCustomers',
-            'totalDesigns', 'pendingAppointments'
-        ));
-    }
+    $upcomingAppointments = Appointment::with('user')
+        ->whereNotNull('tanggal')
+        ->where('status', '!=', 'Selesai')
+        ->orderBy('tanggal')
+        ->orderBy('jam')
+        ->take(5)
+        ->get();
+
+    return view('admin.index', compact(
+        'totalAppointments',
+        'totalCustomers',
+        'totalDesigns',
+        'pendingAppointments',
+        'upcomingAppointments'
+    ));
+}
 
     public function customers(Request $request)
     {
@@ -196,4 +207,29 @@ class AdminController extends Controller
         $design->delete();
         return redirect()->back()->with('success', 'Desain berhasil dihapus.');
     }
+    public function rekap()
+{
+    $rekapBulanan = Appointment::selectRaw("
+        MONTH(created_at) as bulan,
+        YEAR(created_at) as tahun,
+
+        SUM(CASE
+            WHEN tipe_order = 'nail_art'
+            THEN 1 ELSE 0
+        END) as total_nail_art,
+
+        SUM(CASE
+            WHEN tipe_order = 'press_on'
+            THEN 1 ELSE 0
+        END) as total_press_on,
+
+        COUNT(*) as total_pesanan
+    ")
+    ->groupBy('tahun', 'bulan')
+    ->orderBy('tahun', 'desc')
+    ->orderBy('bulan', 'desc')
+    ->get();
+
+    return view('admin.rekap', compact('rekapBulanan'));
+}
 }
