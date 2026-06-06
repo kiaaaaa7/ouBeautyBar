@@ -122,6 +122,32 @@
       .panel.active { display: block; }
       .finger-item select { font-size: .65rem; padding: .4rem .2rem; }
     }
+    .guide-koin{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    background:#f8f6ef;
+    border:1px solid #e5dfcf;
+    border-radius:10px;
+    padding:12px;
+    margin:8px 0 12px;
+}
+
+.guide-koin img{
+    width:120px;
+    border-radius:8px;
+    object-fit:cover;
+}
+
+.guide-koin-text{
+    font-size:.85rem;
+    color:#555;
+}
+
+.guide-koin-text ul{
+    margin:6px 0 0;
+    padding-left:18px;
+}
   </style>
 </head>
 <body>
@@ -458,15 +484,33 @@
 
         <div class="form-group full">
           <label>Foto Jari Bersama Koin 500 Perak <span style="color:#e53935">*</span></label>
-          <div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
-            <input type="file" id="foto-jari-koin" name="foto_jari_koin"
-                   accept="image/*" onchange="previewSingle(this,'prev-jari-koin')"/>
-            <span class="upload-icon">🖐️</span>
-            <p class="upload-text">Upload foto semua jari bersisian dengan koin 500 perak</p>
-            <p class="upload-hint">Untuk akurasi ukuran kuku — JPG, PNG, maks. 2MB</p>
-            <img id="prev-jari-koin" class="preview-single" src="" alt="Preview Jari"/>
-          </div>
-          @error('foto_jari_koin') <span class="invalid-feedback">{{ $message }}</span> @enderror
+
+<div class="guide-koin">
+  <img src="{{ asset('images/guide-koin.jpg') }}" alt="Panduan Ukur Kuku">
+
+  <div class="guide-koin-text">
+    <strong>📏 Panduan Foto Ukur Kuku</strong>
+    <ul>
+      <li>Letakkan koin Rp500 di samping jari.</li>
+      <li>Foto semua jari dari atas.</li>
+      <li>Pastikan pencahayaan terang.</li>
+      <li>Jangan gunakan filter atau blur.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="upload-area" onclick="document.getElementById('foto-jari-koin').click()">
+  <input type="file" id="foto-jari-koin" name="foto_jari_koin"
+         accept="image/*" onchange="previewSingle(this,'prev-jari-koin')"/>
+  <span class="upload-icon">🖐️</span>
+  <p class="upload-text">Upload foto semua jari bersisian dengan koin 500 perak</p>
+  <p class="upload-hint">Untuk akurasi ukuran kuku — JPG, PNG, maks. 2MB</p>
+  <img id="prev-jari-koin" class="preview-single" src="" alt="Preview Jari"/>
+</div>
+
+@error('foto_jari_koin')
+<span class="invalid-feedback">{{ $message }}</span>
+@enderror
         </div>
 
         <div class="form-group full">
