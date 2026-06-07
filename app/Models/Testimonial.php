@@ -9,7 +9,15 @@ class Testimonial extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'isi', 'rating'];
+    protected $fillable = [
+        'user_id', 'isi', 'rating',
+        'foto_hasil', 'design_id', 'bentuk_kuku', 'panjang_kuku',
+    ];
 
-    public function user() { return $this->belongsTo(User::class); }
+    protected $casts = [
+        'foto_hasil' => 'array',
+    ];
+
+    public function user()   { return $this->belongsTo(User::class); }
+    public function design() { return $this->belongsTo(Design::class); }
 }

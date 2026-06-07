@@ -19,26 +19,24 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
         $user = auth()->user();
 
+        // Admin → halaman admin
         if ($user->is_admin) {
             return redirect()->route('admin.index');
         }
 
-        return redirect()->intended(route('dashboard'));
+        // Customer → beranda (bukan dashboard)
+        return redirect('/');
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 }
