@@ -60,6 +60,7 @@ class AppointmentController extends Controller
             $rules['slot_id']        = 'required|exists:slots,id';
             $rules['metode_bayar']   = 'required';
             $rules['foto_referensi'] = 'nullable|image|max:2048';
+            $rules['bukti_bayar']    = 'nullable|image|max:2048';
         }
 
         if ($tipe === 'press_on') {
@@ -106,9 +107,16 @@ class AppointmentController extends Controller
 
         // Foto
         $fotoRef = null;
-        if ($tipe === 'nail_art' && $request->hasFile('foto_referensi')) {
-            $fotoRef = $request->file('foto_referensi')->store('referensi', 'public');
-        }
+if ($tipe === 'nail_art' && $request->hasFile('foto_referensi_na')) {
+    $fotoRef = $request->file('foto_referensi_na')->store('referensi', 'public');
+}
+
+$buktiBayar = null;
+if ($tipe === 'nail_art' && $request->hasFile('bukti_bayar')) {
+    $buktiBayar = $request->file('bukti_bayar')->store('bukti-bayar', 'public');
+} elseif ($tipe === 'press_on' && $request->hasFile('bukti_bayar_po')) {
+    $buktiBayar = $request->file('bukti_bayar_po')->store('bukti-bayar', 'public');
+}
 
         $fotoRefList = [];
         if ($tipe === 'press_on' && $request->hasFile('foto_referensi')) {

@@ -410,7 +410,7 @@
         <div class="form-group full">
           <label>Foto Referensi Desain (opsional)</label>
           <div class="upload-area" onclick="document.getElementById('foto-ref-single').click()">
-            <input type="file" id="foto-ref-single" name="foto_referensi"
+            <input type="file" id="foto-ref-single" name="foto_referensi_na"
                    accept="image/*" onchange="previewSingle(this,'prev-ref-single')"/>
             <span class="upload-icon">📸</span>
             <p class="upload-text">Klik untuk upload foto referensi</p>
@@ -472,7 +472,7 @@
         <div class="form-group full" id="upload-bukti-po" style="display:none">
           <label>Upload Bukti Pembayaran <span style="color:#e53935">*</span></label>
           <div class="upload-area" onclick="document.getElementById('bukti-bayar-po').click()">
-            <input type="file" id="bukti-bayar-po" name="bukti_bayar"
+            <input type="file" id="bukti-bayar-po" name="bukti_bayar_po"
                    accept="image/*" onchange="previewSingle(this,'prev-bukti-po')"/>
             <span class="upload-icon">🧾</span>
             <p class="upload-text">Upload screenshot/foto bukti transfer atau QRIS</p>

@@ -417,6 +417,7 @@ jumlah_design: {{ $designIds->unique()->count() }},
     foto_referensi: "{{ $appt->foto_referensi ? asset('storage/' . $appt->foto_referensi) : '' }}",
     foto_jari_koin: "{{ $appt->foto_jari_koin ? asset('storage/' . $appt->foto_jari_koin) : '' }}",
     bukti_bayar: "{{ $appt->bukti_bayar ? asset('storage/' . $appt->bukti_bayar) : '' }}",
+    debug_id: "{{ $appt->id }}",
     foto_referensi_list: [
       @if($appt->foto_referensi_list)
         @foreach($appt->foto_referensi_list as $f)
@@ -440,6 +441,7 @@ jumlah_design: {{ $designIds->unique()->count() }},
   @endforeach
 };
 
+alert(JSON.stringify(d));
 function bukaDetail(id) {
   const d = appointmentsData[id];
 
