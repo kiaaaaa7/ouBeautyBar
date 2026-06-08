@@ -267,7 +267,20 @@
         </thead>
         <tbody>
           @foreach($appointments as $i => $appt)
-          @php $isNailArt = $appt->tipe_order !== 'press_on'; @endphp
+          @php
+    $isNailArt = $appt->tipe_order !== 'press_on';
+    $pilihanJari = $appt->pilihan_jari ?? [];
+
+    $designIds = collect($pilihanJari)
+        ->flatten()
+        ->filter()
+        ->unique();
+
+    $customDesign = $designIds->count() > 1;
+
+    $jariKiri = ['Kelingking','Manis','Tengah','Telunjuk','Ibu Jari'];
+    $jariKanan = ['Ibu Jari','Telunjuk','Tengah','Manis','Kelingking'];
+@endphp
           <tr>
             <td>{{ $i + 1 }}</td>
             <td>
@@ -278,9 +291,21 @@
               @endif
             </td>
             <td>
-              {{ $appt->design->nama ?? '—' }}<br>
-              <small style="color:var(--gray)">{{ $appt->panjang_kuku }} · {{ $appt->bentuk_kuku ?? '—' }}</small>
-            </td>
+    @php
+        $designIds = collect($appt->pilihan_jari['kiri'] ?? [])
+            ->merge($appt->pilihan_jari['kanan'] ?? [])
+            ->filter()
+            ->unique();
+
+        $isMixDesign = $designIds->count() > 1;
+    @endphp
+
+    {{ $isMixDesign ? 'Mix Design' : ($appt->design->nama ?? '—') }}<br>
+
+    <small style="color:var(--gray)">
+        {{ $appt->panjang_kuku }} · {{ $appt->bentuk_kuku ?? '—' }}
+    </small>
+</td>
             <td>
               <span class="tipe-badge {{ $isNailArt ? 'tipe-nail-art' : 'tipe-press-on' }}">
                 {{ $isNailArt ? '💅 Nail Art' : '📦 Press On' }}
@@ -355,9 +380,22 @@ const appointmentsData = {
   @foreach($appointments as $appt)
   @php
     $isNailArt = $appt->tipe_order !== 'press_on';
-    $pilihanJari = $appt->pilihan_jari ?? [];
-    $jariKiri = ['Kelingking','Manis','Tengah','Telunjuk','Ibu Jari'];
-    $jariKanan = ['Ibu Jari','Telunjuk','Tengah','Manis','Kelingking'];
+$pilihanJari = $appt->pilihan_jari ?? [];
+
+$designIds = collect();
+
+if (!empty($pilihanJari['kiri'])) {
+    $designIds = $designIds->merge($pilihanJari['kiri']);
+}
+
+if (!empty($pilihanJari['kanan'])) {
+    $designIds = $designIds->merge($pilihanJari['kanan']);
+}
+
+$customDesign = $designIds->unique()->count() > 1;
+
+$jariKiri = ['Kelingking','Manis','Tengah','Telunjuk','Ibu Jari'];
+$jariKanan = ['Ibu Jari','Telunjuk','Tengah','Manis','Kelingking'];
   @endphp
   {{ $appt->id }}: {
     customer: "{{ addslashes($appt->user->name) }}",
@@ -365,7 +403,9 @@ const appointmentsData = {
     no_wa: "{{ $appt->no_wa ?? '' }}",
     tipe: "{{ $isNailArt ? 'Nail Art' : 'Press On Nail' }}",
     desain: "{{ addslashes($appt->design->nama ?? '—') }}",
-    kategori: "{{ addslashes($appt->design->kategori ?? '') }}",
+kategori: "{{ addslashes($appt->design->kategori ?? '') }}",
+custom_design: {{ $customDesign ? 'true' : 'false' }},
+jumlah_design: {{ $designIds->unique()->count() }},
     panjang_kuku: "{{ $appt->panjang_kuku ?? '—' }}",
     bentuk_kuku: "{{ $appt->bentuk_kuku ?? '—' }}",
     tanggal: "{{ $appt->tanggal ? \Carbon\Carbon::parse($appt->tanggal)->format('d M Y') : 'Dikirim kurir' }}",
@@ -402,6 +442,9 @@ const appointmentsData = {
 
 function bukaDetail(id) {
   const d = appointmentsData[id];
+
+  console.log(d.custom_design);
+  console.log(d.jumlah_design);
   if (!d) return;
 
   const dp = d.tipe === 'Nail Art' ? Math.ceil(d.total_harga * 0.5) : d.total_harga;
@@ -413,7 +456,16 @@ function bukaDetail(id) {
       <div class="detail-item"><p class="detail-label">No. WhatsApp</p><p class="detail-value">${d.no_wa || '<em style="color:var(--gray)">—</em>'}</p></div>
       <div class="detail-item"><p class="detail-label">Tipe Order</p><p class="detail-value">${d.tipe}</p></div>
       <div class="detail-item"><p class="detail-label">Status</p><p class="detail-value">${d.status}</p></div>
-      <div class="detail-item"><p class="detail-label">Desain Utama</p><p class="detail-value">${d.desain}<br><small style="color:var(--gray)">${d.kategori}</small></p></div>
+      <div class="detail-item">
+  <p class="detail-label">Desain Utama</p>
+  <p class="detail-value">
+    ${
+      d.custom_design
+        ? 'Mix Design'
+        : `${d.desain}<br><small style="color:var(--gray)">${d.kategori}</small>`
+    }
+  </p>
+</div>
       <div class="detail-item"><p class="detail-label">Kuku</p><p class="detail-value">${d.panjang_kuku} · ${d.bentuk_kuku}</p></div>
       <div class="detail-item"><p class="detail-label">Jadwal</p><p class="detail-value">${d.tanggal}${d.jam ? ' · ' + d.jam : ''}</p></div>
       <div class="detail-item"><p class="detail-label">Pembayaran</p><p class="detail-value">${d.metode_bayar}<br><small style="color:var(--lilac-deep)">Total: Rp ${d.total_harga.toLocaleString('id-ID')}</small><br><small style="color:var(--olive)">${dpLabel}: Rp ${dp.toLocaleString('id-ID')}</small></p></div>

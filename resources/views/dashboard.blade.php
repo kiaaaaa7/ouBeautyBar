@@ -140,9 +140,26 @@
         <tbody>
           @foreach($appointments as $i => $appt)
           @php
-            $isNailArt  = $appt->tipe_order !== 'press_on';
-            $namaDesain = $appt->design ? $appt->design->nama : '—';
-            $katDesain  = $appt->design ? $appt->design->kategori : '';
+    $isNailArt  = $appt->tipe_order !== 'press_on';
+
+    $namaDesain = $appt->design ? $appt->design->nama : '—';
+    $katDesain  = $appt->design ? $appt->design->kategori : '';
+
+    // cek apakah pilih lebih dari 1 desain
+    $customDesign = false;
+
+    if (!empty($appt->pilihan_jari)) {
+        $designIds = collect($appt->pilihan_jari)
+            ->flatten()
+            ->unique();
+
+        $customDesign = $designIds->count() > 1;
+    }
+
+    if ($customDesign) {
+        $namaDesain = 'Mix Design';
+        $katDesain = '';
+    }
             $gambar     = $appt->design && $appt->design->gambar
                             ? asset('storage/' . $appt->design->gambar)
                             : null;
